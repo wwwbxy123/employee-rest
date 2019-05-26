@@ -61,7 +61,7 @@ public class EmployeeRestController {
 
     public Employee getEmployeeById(@PathVariable Long id) {   // 当java method 参数的名字如果和variable的名字一样的话，就可以不加 @PathVariable（value = "id"）
         //return employeeDao.getEmployeeById(id);
-        Object cachedEmp = (Employee) cache.get(id);
+        Object cachedEmp = (Employee) cache.get(id);  // cacheEmp是个general的type，不一定是Employee
         if (cachedEmp != null) {
             return (Employee) cachedEmp;   //只有cachedEmp不为空的情况下才需要做cast，于是可以先 Object cachedEmp
         }
@@ -82,7 +82,7 @@ public class EmployeeRestController {
     }
 
     /* PUT */
-    @PutMapping("employees/{id}")
+    @PutMapping("employees/{empId}")
 
     public Employee putEmployeeById(@PathVariable Long empId, @Valid @RequestBody Employee newInput){  // 1
         Employee existEmp = employeeDao.getEmployeeById(empId);
@@ -93,7 +93,7 @@ public class EmployeeRestController {
         existEmp.setLastName(newInput.getLastName());
         existEmp.setAge(newInput.getAge());  // 3 setter 和getter的运用
 
-        employeeDao.save(existEmp);  // 4 要把新的东西改回去
+        employeeDao.save(existEmp);  // 4 要把新的东西改回去， jpa决定的，Dao会帮我们更新,把obj存到db里去
         cache.put(empId, existEmp);  // 5 如果不做这个的话，那么get到的永远是旧的那个employ
         return existEmp;
     }
