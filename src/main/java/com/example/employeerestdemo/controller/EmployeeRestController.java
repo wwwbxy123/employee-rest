@@ -32,7 +32,7 @@ import javax.validation.Valid;
 
 //@Controller   //把我们写的这个EmployeeRestController 交给spring管理
 @RestController
-@RequestMapping("api/v1")  //用公共变量去优化重复的变量
+//@RequestMapping("api/v1")  //用公共变量去优化重复的变量
 public class EmployeeRestController {
 
     @Autowired
@@ -45,19 +45,22 @@ public class EmployeeRestController {
     // HTTP request body --> java Bean Spring MVC 帮我们做了 desirilized 的过程  --> convert to HTTP Response Body in Json
     //@RequestMapping(value = "api/v1/employees", method = RequestMethod.POST)   //rest api 的精华
     @PostMapping("employees")  // 和上面注视掉的那一行效果是一样的，
+    //@ResponseBody //返回body
     public Employee createEmployee(@Valid @RequestBody Employee input){    // json convert to java obj, 是spring MVC 的filter帮我们完成额
         //优化，加了@Valid spring mvc会帮我们做input valid
-        Long id = employeeDao.save(input);
-        Employee entry = employeeDao.getEmployeeById(id);
-        cache.put(id, entry);
-        //input.setId(id);
-        return entry;
+
+        Long genId = employeeDao.save(input);
+        Employee result = employeeDao.getEmployeeById(genId);
+        cache.put(genId, result);
+        return result;
+
     }
 
     /* GET */
     @GetMapping("employees/{id}")
 
     public Employee getEmployeeById(@PathVariable Long id) {   // 当java method 参数的名字如果和variable的名字一样的话，就可以不加 @PathVariable（value = "id"）
+        //return employeeDao.getEmployeeById(id);
         Object cachedEmp = (Employee) cache.get(id);
         if (cachedEmp != null) {
             return (Employee) cachedEmp;   //只有cachedEmp不为空的情况下才需要做cast，于是可以先 Object cachedEmp
@@ -84,7 +87,7 @@ public class EmployeeRestController {
     public Employee putEmployeeById(@PathVariable Long empId, @Valid @RequestBody Employee newInput){  // 1
         Employee existEmp = employeeDao.getEmployeeById(empId);
         if (existEmp == null){
-            throw new IllegalAccessException("id does not exist");
+            throw new IllegalArgumentException("id does not exist");
         }
         existEmp.setFirstName(newInput.getFirstName());
         existEmp.setLastName(newInput.getLastName());
